@@ -107,7 +107,7 @@ static int video_decode_frame(AVCodecContext *p_codec_ctx, packet_queue_t *p_pkt
 // 将视频包解码得到视频帧，然后写入picture队列
 static int video_decode_thread(void *arg)
 {
-    player_stat_t *is = (player_stat_t *)arg;
+    player_stat_t *is = (player_stat_t *)arg;     
     AVFrame *p_frame = av_frame_alloc();
     double pts;
     double duration;
@@ -124,6 +124,7 @@ static int video_decode_thread(void *arg)
 
     while (1)
     {
+      //解码一帧
         got_picture = video_decode_frame(is->p_vcodec_ctx, &is->video_pkt_queue, p_frame);
         if (got_picture < 0)
         {
@@ -132,7 +133,7 @@ static int video_decode_thread(void *arg)
         
         duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational){frame_rate.den, frame_rate.num}) : 0);   // 当前帧播放时长
         pts = (p_frame->pts == AV_NOPTS_VALUE) ? NAN : p_frame->pts * av_q2d(tb);   // 当前帧显示时间戳
-        ret = queue_picture(is, p_frame, pts, duration, p_frame->pkt_pos);   // 将当前帧压入frame_queue
+        ret = queue_picture(is, p_frame, pts, duration, p_frame->pkt_pos);   // 将当前帧压入frame_queue  满时会等待
         av_frame_unref(p_frame);
 
         if (ret < 0)
@@ -517,8 +518,8 @@ static int open_video_stream(player_stat_t *is)
 
 int open_video(player_stat_t *is)
 {
-    open_video_stream(is);
-    open_video_playing(is);
+    open_video_stream(is);//视频解码线程
+    open_video_playing(is);//视频播放线程
 
     return 0;
 }

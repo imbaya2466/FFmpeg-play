@@ -39,6 +39,7 @@ static int demux_init(player_stat_t *is)
 
     // 1.2 搜索流信息：读取一段视频文件数据，尝试解码，将取到的流信息填入p_fmt_ctx->streams
     //     ic->streams是一个指针数组，数组大小是pFormatCtx->nb_streams
+    // 填充流信息
     err = avformat_find_stream_info(p_fmt_ctx, NULL);
     if (err < 0)
     {
@@ -103,14 +104,15 @@ static int stream_has_enough_packets(AVStream *st, int stream_id, packet_queue_t
 }
 
 /* this thread gets the stream from the disk or the network */
+// 可以从io获得av流
 static int demux_thread(void *arg)
 {
     player_stat_t *is = (player_stat_t *)arg;
     AVFormatContext *p_fmt_ctx = is->p_fmt_ctx;
     int ret;
-    AVPacket pkt1, *pkt = &pkt1;
+    AVPacket pkt1, *pkt = &pkt1;   //AVPacket本身不含数据，data由读取时获取
 
-    SDL_mutex *wait_mutex = SDL_CreateMutex();
+    SDL_mutex *wait_mutex = SDL_CreateMutex();  //单纯等时间用的锁?
 
     printf("demux_thread running...\n");
 
@@ -129,6 +131,7 @@ static int demux_thread(void *arg)
         {
             /* wait 10 ms */
             SDL_LockMutex(wait_mutex);
+            //解除锁，等待信号或指定时间，之后上锁
             SDL_CondWaitTimeout(is->continue_read_thread, wait_mutex, 10);
             SDL_UnlockMutex(wait_mutex);
             continue;
@@ -168,11 +171,12 @@ static int demux_thread(void *arg)
         }
         else
         {
+          //包都是是用引用计数的，这里是计数-1，为0时释放
             av_packet_unref(pkt);
         }
     }
 
-    ret = 0;
+    ret = 0;   //无法退出bug解决
 
     if (ret != 0)
     {
@@ -189,12 +193,13 @@ static int demux_thread(void *arg)
 
 int open_demux(player_stat_t *is)
 {
+    //获取文件格式信息、av流
     if (demux_init(is) != 0)
     {
         printf("demux_init() failed\n");
         return -1;
     }
-
+    //开启读取线程
     is->read_tid = SDL_CreateThread(demux_thread, "demux_thread", is);
     if (is->read_tid == NULL)
     {

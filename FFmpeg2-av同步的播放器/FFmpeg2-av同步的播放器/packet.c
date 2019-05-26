@@ -36,7 +36,7 @@ int packet_queue_put(packet_queue_t *q, AVPacket *pkt)
         return -1;
     }
     
-    pkt_list->pkt = *pkt;
+    pkt_list->pkt = *pkt;//拷贝的是AVPacket不是指针
     pkt_list->next = NULL;
 
     SDL_LockMutex(q->mutex);

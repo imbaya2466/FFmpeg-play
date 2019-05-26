@@ -439,8 +439,8 @@ static void sdl_audio_callback(void *opaque, Uint8 *stream, int len)
 
 int open_audio(player_stat_t *is)
 {
-    open_audio_stream(is);
-    open_audio_playing(is);
+    open_audio_stream(is);  //音频解码线程
+    open_audio_playing(is); //音频播放线程
 
     return 0;
 }

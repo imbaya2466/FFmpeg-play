@@ -114,25 +114,27 @@ static player_stat_t *player_init(const char *p_input_file)
         return NULL;
     }
 
-    is->filename = av_strdup(p_input_file);
+    is->filename = av_strdup(p_input_file);//复制字串
     if (is->filename == NULL)
     {
         goto fail;
     }
 
-    /* start video display */
+
+    //初始化帧队列及其辅助数据标识(锁、信号量)
     if (frame_queue_init(&is->video_frm_queue, &is->video_pkt_queue, VIDEO_PICTURE_QUEUE_SIZE, 1) < 0 ||
         frame_queue_init(&is->audio_frm_queue, &is->audio_pkt_queue, SAMPLE_QUEUE_SIZE, 1) < 0)
     {
         goto fail;
     }
-
+    //初始化包队列
     if (packet_queue_init(&is->video_pkt_queue) < 0 ||
         packet_queue_init(&is->audio_pkt_queue) < 0)
     {
         goto fail;
     }
 
+    //放一个空包给packet
     AVPacket flush_pkt;
     flush_pkt.data = NULL;
     packet_queue_put(&is->video_pkt_queue, &flush_pkt);
@@ -146,6 +148,7 @@ fail:
         goto fail;
     }
 
+    //初始化时钟
     init_clock(&is->video_clk, &is->video_pkt_queue.serial);
     init_clock(&is->audio_clk, &is->audio_pkt_queue.serial);
 
@@ -224,6 +227,7 @@ int player_running(const char *p_input_file)
 {
     player_stat_t *is = NULL;
 
+    //初始化播放器状态
     is = player_init(p_input_file);
     if (is == NULL)
     {
@@ -231,9 +235,9 @@ int player_running(const char *p_input_file)
         do_exit(is);
     }
 
-    open_demux(is);
-    open_video(is);
-    open_audio(is);
+    open_demux(is);//初始化文件格式、流环境，开启读取流的线程
+    open_video(is);//初始化sdl,开启视频解码线程、视频播放线程
+    open_audio(is);//初始化sdl,开启音频解码线程、音频播放线程
 
     SDL_Event event;
 

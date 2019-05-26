@@ -6,6 +6,8 @@ void frame_queue_unref_item(frame_t *vp)
     av_frame_unref(vp->frame);
 }
 
+
+//环型缓冲区
 int frame_queue_init(frame_queue_t *f, packet_queue_t *pktq, int max_size, int keep_last)
 {
     int i;

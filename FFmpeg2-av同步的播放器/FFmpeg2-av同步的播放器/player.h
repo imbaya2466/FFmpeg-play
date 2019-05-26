@@ -117,22 +117,22 @@ typedef struct {
     int max_size;                   // 队列可存储最大帧数
     int keep_last;
     int rindex_shown;               // 当前是否有帧在显示
-    SDL_mutex *mutex;
-    SDL_cond *cond;
+    SDL_mutex *mutex;               // 锁
+    SDL_cond *cond;                 // 信号量
     packet_queue_t *pktq;           // 指向对应的packet_queue
 }   frame_queue_t;
 
 typedef struct {
-    char *filename;
-    AVFormatContext *p_fmt_ctx;
-    AVStream *p_audio_stream;
-    AVStream *p_video_stream;
+    char *filename;                   //读取文件名
+    AVFormatContext *p_fmt_ctx;       //格式环境
+    AVStream *p_audio_stream;         //音频流
+    AVStream *p_video_stream;         //视屏流
     AVCodecContext *p_acodec_ctx;
     AVCodecContext *p_vcodec_ctx;
 
-    int audio_idx;
-    int video_idx;
-    sdl_video_t sdl_video;
+    int audio_idx;                    //音频流索引
+    int video_idx;                    //视屏流索引
+    sdl_video_t sdl_video;            
 
     play_clock_t audio_clk;                   // 音频时钟
     play_clock_t video_clk;                   // 视频时钟
@@ -159,11 +159,11 @@ typedef struct {
     double audio_clock;
     int audio_clock_serial;
     
-    int abort_request;
+    int abort_request;  //终止请求
     int paused;
     int step;
 
-    SDL_cond *continue_read_thread;
+    SDL_cond *continue_read_thread;  //？？的信号量
     SDL_Thread *read_tid;           // demux解复用线程
 
 }   player_stat_t;
